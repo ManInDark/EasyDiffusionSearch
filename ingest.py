@@ -65,38 +65,47 @@ def test_extensions(path: str) -> tuple[bool, str]:
     else:
         return (False, path)
 
-async def parse_file_async(folder, txtfile):
+def figure_out_image_path(folder, file, face_correction, upscaling):
+    img_path = os.path.join(IMAGE_ROOT_PATH, folder, file)
+    res = test_extensions(img_path)
+    if not res[0]:
+        if not face_correction == "None": # face correction
+            img_path = img_path.replace(".extension", f"_{face_correction}.extension")
+        if not upscaling == "None": # upscaling
+            img_path = img_path.replace(".extension", f"_{upscaling}.extension")
+        res = test_extensions(img_path)
+        if not res[0]:
+            print("Could not find file")
+            print(face_correction, upscaling, img_path)
+            exit()
+    return res[1]
+
+async def parse_txt_file_async(folder, txtfile):
     with open(os.path.join(IMAGE_ROOT_PATH, folder, txtfile), "r") as file:
         lines = file.readlines()
-        try:
-            # figure out image path
-            parsed_content = parse_lines(lines)
-            img_path = os.path.join(IMAGE_ROOT_PATH, folder, txtfile.replace(".txt", ".extension"))
-            res = test_extensions(img_path)
-            if not res[0]:
-                if not parsed_content[11] == "None": # face correction
-                    img_path = img_path.replace(".extension", f"_{parsed_content[11]}.extension")
-                if not parsed_content[10] == "None": # upscaling
-                    img_path = img_path.replace(".extension", f"_{parsed_content[10]}.extension")
-                res = test_extensions(img_path)
-                if not res[0]:
-                    print("Could not find file")
-                    print(parsed_content, img_path)
-                    exit()
+        parsed_content = parse_lines(lines)
+        img_path = figure_out_image_path(folder, txtfile.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
-            # insert into database
-            insert_image(res[1], *parsed_content)
-        except Exception as e:
-            print(lines)
-            print(os.path.join(IMAGE_ROOT_PATH, folder, txtfile))
-            raise e
+        # insert into database
+        insert_image(img_path, *parsed_content)
+
+async def parse_json_file_async(folder, jsonfile):
+    import json
+    with open(os.path.join(IMAGE_ROOT_PATH, folder, jsonfile), "r") as file:
+        content = "".join(file.readlines())
+        parsed_content = json.loads(content)
+        img_path = figure_out_image_path(folder, jsonfile.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
+
+        insert_image(img_path, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 tasklist = []
 async def main():
     for folder in os.listdir(IMAGE_ROOT_PATH):
-        for txtfile in os.listdir(os.path.join(IMAGE_ROOT_PATH, folder)):
-            if txtfile.endswith(".txt"):
-                tasklist.append(asyncio.create_task(parse_file_async(folder, txtfile)))
+        for file in os.listdir(os.path.join(IMAGE_ROOT_PATH, folder)):
+            if file.endswith(".txt"):
+                tasklist.append(asyncio.create_task(parse_txt_file_async(folder, file)))
+            elif file.endswith(".json"):
+                tasklist.append(asyncio.create_task(parse_json_file_async(folder, file)))
     await asyncio.gather(*tasklist)
     print("Done")
     
