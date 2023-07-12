@@ -19,6 +19,9 @@ def insert_image(path, prompt, negative_prompt, seed, model, width, height, samp
     cursor.execute("INSERT INTO image VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction))
     connection.commit()
 
+def check_if_image_in_database(path):
+    return len(list(cursor.execute("SELECT path FROM image WHERE path=?", (path,)))) > 0
+
 def get_value_for(content_string: str, name: str) -> str:
     index = content_string.index(name)
     return content_string[index + len(name):content_string[index:].index("\n") + index].strip() 
@@ -87,7 +90,8 @@ async def parse_txt_file_async(folder, txtfile):
         img_path = figure_out_image_path(folder, txtfile.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
         # insert into database
-        insert_image(img_path, *parsed_content)
+        if not check_if_image_in_database(img_path):
+            insert_image(img_path, *parsed_content)
 
 async def parse_json_file_async(folder, jsonfile):
     import json
@@ -96,7 +100,8 @@ async def parse_json_file_async(folder, jsonfile):
         parsed_content = json.loads(content)
         img_path = figure_out_image_path(folder, jsonfile.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
-        insert_image(img_path, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
+        if not check_if_image_in_database(img_path):
+            insert_image(img_path, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 tasklist = []
 async def main():

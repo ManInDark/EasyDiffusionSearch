@@ -36,5 +36,5 @@ In case you want to move the installation you'll have to re-ingest the data.
 # Roadmap
 
 - [X] ingest json format too
-- [ ] check if file already ingested
+- [X] check if file already ingested
 - [ ] implement search directly into website
