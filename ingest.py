@@ -74,14 +74,14 @@ async def parse_file_async(folder, txtfile):
                     img_path = img_path.replace(".extension", f"_{parsed_content[11]}.extension")
                 if not parsed_content[10] == "None": # upscaling
                     img_path = img_path.replace(".extension", f"_{parsed_content[10]}.extension")
-            res = test_extensions(img_path)
-            if not res[0]: 
-                print("Could not find file")
-                print(parsed_content, img_path)
-                exit()
+                res = test_extensions(img_path)
+                if not res[0]:
+                    print("Could not find file")
+                    print(parsed_content, img_path)
+                    exit()
 
             # insert into database
-            insert_image(img_path, *parsed_content)
+            insert_image(res[1], *parsed_content)
         except Exception as e:
             print(lines)
             print(os.path.join(IMAGE_ROOT_PATH, folder, txtfile))
