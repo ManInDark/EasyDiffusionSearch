@@ -22,3 +22,7 @@ def search_to_html(query: str):
         site = site.replace("<br>", f"<img src='{result[0]}' title='{options}'>\n<br>")
     with open("resultsite.html", "w") as f:
         f.write(site)
+
+import sys
+if __name__ == "__main__" and len(sys.argv) > 1:
+    search_to_html(sys.argv[1])
