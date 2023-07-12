@@ -1,8 +1,12 @@
 import sqlite3
 import os
 import asyncio
+import sys
 
-IMAGE_ROOT_PATH = "../images"
+if len(sys.argv) < 2:
+    IMAGE_ROOT_PATH = "../images"
+else:
+    IMAGE_ROOT_PATH = sys.argv[1]
 
 connection = sqlite3.connect("database.db")
 cursor = connection.cursor()
