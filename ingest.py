@@ -1,15 +1,17 @@
-import sqlite3
 import os
-import asyncio
-import sys
+if not os.path.isfile("config.json"):
+    print("config.json not found, please create one")
+    exit()
 
-if len(sys.argv) < 2:
-    IMAGE_ROOT_PATH = "../images"
-else:
-    IMAGE_ROOT_PATH = sys.argv[1]
+import json
+with open("config.json", "r") as f:
+    IMAGE_ROOT_PATH = json.load(f)["image-path"]
 
+import sqlite3
 connection = sqlite3.connect("database.db")
 cursor = connection.cursor()
+
+import asyncio
 
 if ("image",) not in cursor.execute("SELECT name FROM sqlite_master"):
     cursor.execute("CREATE TABLE image(path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction)")
