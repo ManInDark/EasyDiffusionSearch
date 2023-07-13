@@ -13,13 +13,17 @@ def read_site() -> str:
     with open("searchsite.html", "r") as f:
         return "".join(f.readlines())
 
-def search_to_html(query: str):
+def create_image_string(query: str) -> str:
     results = search(query)
-    site = read_site()
+    sum_string = ""
 
     for result in results:
         options = f"Path: {result[0]}\nPrompt: {result[1]}\nNegative Prompt: {result[2]}\nSeed: {result[3]}\nModel: {result[4]}\nSize: {result[5]}x{result[6]}\nSampler: {result[7]}\nSteps: {result[8]}\nGuidance Scale: {result[9]}\nLoRA: {result[10]}\nUpscaling: {result[11]}\nFace Correction: {result[12]}\n"
-        site = site.replace("<br>", f"<img src='{result[0]}' title='{options}'>\n<br>")
+        sum_string += f"<img src='{result[0]}' title='{options}'>\n"
+    return sum_string
+
+def search_to_html(query: str):
+    site = read_site().replace("<br>", create_image_string(query))
     with open("resultsite.html", "w") as f:
         f.write(site)
 
