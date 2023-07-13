@@ -1,38 +1,30 @@
 # EasyDiffuion Image Viewer
 
-This program allows for easily viewing of your generated images.
+This program allows for the easy viewing and filtering of images generated with [EasyDiffusion](https://github.com/easydiffusion/easydiffusion).
 
 # How to use
 
-You have to first ingest the data into a database to make it possible to search the images. This is done by executing
-```
-python ingest.py <path>
-```
-where \<path\> represents the auto-save location in the webui.
+First change the config.json file by setting the image-path to the absolute path of your image folder. This path can simply be copied from the Web UI.
 
-Now you can search for images like this:
-
+Afterwards you have to ingest the data into a database to make it possible to search the images. This is done by executing
 ```
-python search.py "<query>"
+python ingest.py
 ```
+This might take a while, but not that long.
 
-This then generates a resultsite.html file that can then be opened with the webbrowser of your choice.
-The \<query\> is an SQL WHERE clause in a table with the columns: path, prompt, negative_prompt, seed (int), model, width (int), height (int), sampler, steps (int), guidance_scale (float), lora, upscaling, face_correction
+Now you can start the search site with
+```
+python server.py
+```
+Which can then be opened on localhost:8000
+
+You can now type in a query into the text field at the top of the page and with the press of return it will show you the filtered images.
+The query needs to be a SQL WHERE clause in a table with the columns: path, prompt, negative_prompt, seed (int), model, width (int), height (int), sampler, steps (int), guidance_scale (float), lora, upscaling, face_correction
 
 Examples:
 
 ```
-"width = 512 AND height = 512"
-"prompt like '%astronaut%'"
-"model like '%sd%'"
+width = 512 AND height = 512
+prompt like '%astronaut%'
+model like '%sd%'
 ```
-
-# Moving
-
-In case you want to move the installation you'll have to re-ingest the data.
-
-# Roadmap
-
-- [X] ingest json format too
-- [X] check if file already ingested
-- [ ] implement search directly into website

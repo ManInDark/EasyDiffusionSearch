@@ -8,6 +8,14 @@
     <style>
         body {
             background-color: rgb(49, 51, 56);
+        }
+
+        textarea {
+            width: 90vw;
+            margin: auto;
+        }
+
+        #imagecontainer {
             display: flex;
             justify-content: space-around;
             flex-flow: row wrap;
@@ -23,10 +31,31 @@
             border: 4px white solid;
         }
     </style>
+    <script>
+        function search() {
+            let searchtext = document.getElementById('searchtext').value
+            let imagecontainer = document.getElementById('imagecontainer').remove()
+            fetch('search?query=' + searchtext)
+                .then(response => response.text())
+                .then(text => new DOMParser().parseFromString(text, 'text/html'))
+                .then(html_like => html_like.getElementsByTagName('div')[0])
+                .then(div => document.body.appendChild(div))
+        }
+
+        function inputEventHandler(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault()
+                search()
+            }
+        }
+    </script>
 </head>
 
 <body>
-    <br>
+    <div>
+        <textarea id="searchtext" onkeydown="inputEventHandler(event)"></textarea>
+    </div>
+    <div id="imagecontainer"><br></div>
 </body>
 
 </html>
