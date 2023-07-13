@@ -24,23 +24,14 @@ def check_if_image_in_database(path):
 
 def get_value_for(content_string: str, name: str) -> str:
     index = content_string.index(name)
-    return content_string[index + len(name):content_string[index:].index("\n") + index].strip() 
+    ind_str = content_string[index + len(name):]
+    return ind_str[:ind_str.index("\n")].strip() 
 
-def get_model_main(content_string: str) -> str:
-    if "Stable Diffusion model" in content_string:
-        return get_value_for(content_string, "Stable Diffusion model: ")
-    elif "Stable Diffusion Model" in content_string:
-        return get_value_for(content_string, "Stable Diffusion Model: ")
-    else:
-        return "???"
-
-def get_model_LoRA(content_string: str) -> str:
-    if "LoRA model" in content_string:
-        return get_value_for(content_string, "LoRA model: ")
-    elif "LoRA" in content_string:
-        return get_value_for(content_string, "LoRA: ")
-    else:
-        return "???"
+def check_options(content_string, name_options):
+    for option in name_options:
+        if option in content_string:
+            return get_value_for(content_string, option)
+    return "???"
 
 def parse_lines(content):
     content_string = "".join(content) + "\n"
@@ -48,13 +39,13 @@ def parse_lines(content):
     prompt = content[0].replace("Prompt: ", "").strip()
     negative_prompt = get_value_for(content_string, "Negative Prompt: ")
     seed = int(get_value_for(content_string, "Seed: "))
-    model = get_model_main(content_string)
+    model = check_options(content_string, ["Stable Diffusion model", "Stable Diffusion Model"])
     width = int(get_value_for(content_string, "Width: "))
     height = int(get_value_for(content_string, "Height: "))
     sampler = get_value_for(content_string, "Sampler: ")
     steps = int(get_value_for(content_string, "Steps: "))
     guidance_scale = float(get_value_for(content_string, "Guidance Scale: "))
-    lora = get_model_LoRA(content_string)
+    lora = check_options(content_string, ["LoRA model", "LoRA"])
     upscaling = get_value_for(content_string, "Use Upscaling: ")
     face_correction = get_value_for(content_string, "Use Face Correction: ")
 
