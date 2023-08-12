@@ -18,6 +18,8 @@ if ("image",) not in cursor.execute("SELECT name FROM sqlite_master"):
     print("Created Table, as it did not exist yet")
 
 def insert_image(path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction):
+    if isinstance(lora, list):
+        lora = " ".join(lora)
     cursor.execute("INSERT INTO image VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction))
     connection.commit()
 
