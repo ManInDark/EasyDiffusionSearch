@@ -49,7 +49,7 @@ def parse_lines(content):
     sampler = get_value_for(content_string, "Sampler: ")
     steps = int(get_value_for(content_string, "Steps: "))
     guidance_scale = float(get_value_for(content_string, "Guidance Scale: "))
-    lora = check_options(content_string, ["LoRA model", "LoRA"])
+    lora = check_options(content_string, ["LoRA model: ", "LoRA: "])
     upscaling = get_value_for(content_string, "Use Upscaling: ")
     face_correction = get_value_for(content_string, "Use Face Correction: ")
 
@@ -84,7 +84,6 @@ async def parse_txt_file_async(folder, txtfile):
         parsed_content = parse_lines(lines)
         img_path = figure_out_image_path(folder, txtfile.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
-        # insert into database
         if not check_if_image_in_database(img_path):
             insert_image(img_path, *parsed_content)
 
