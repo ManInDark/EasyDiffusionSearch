@@ -100,6 +100,8 @@ async def parse_json_file_async(folder, jsonfile):
 tasklist = []
 async def main():
     for folder in os.listdir(IMAGE_ROOT_PATH):
+        if not os.path.isdir(os.path.join(IMAGE_ROOT_PATH, folder)):
+            continue
         for file in os.listdir(os.path.join(IMAGE_ROOT_PATH, folder)):
             if file.endswith(".txt"):
                 tasklist.append(asyncio.create_task(parse_txt_file_async(folder, file)))
