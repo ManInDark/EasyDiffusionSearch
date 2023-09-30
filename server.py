@@ -23,6 +23,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self.send_response(200)
+            self.headers["Cache-Control"] = "max-age=31536000"
             self.end_headers()
             self.wfile.write(bytes(website, "utf-8"))
         elif self.path.startswith("/search"):
@@ -35,6 +36,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(bytes(f'<div id="imagecontainer" onkeydown="inputEventHandler()">{create_image_string(query, True, page, page_size)}</div>', "utf-8"))
         elif image_regex.match(self.path):
             self.send_response(200)
+            self.headers["Cache-Control"] = "max-age=31536000"
             self.end_headers()
             self.wfile.write(open(IMAGE_ROOT_PATH + self.path, "rb").read())
         else:
