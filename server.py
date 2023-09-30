@@ -28,8 +28,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         elif self.path.startswith("/search"):
             self.send_response(200)
             self.end_headers()
-            query = parse_qs(urlparse(self.path).query)["query"][0]
-            self.wfile.write(bytes(f'<div id="imagecontainer" onkeydown="inputEventHandler()">{create_image_string(query, True)}</div>', "utf-8"))
+            args = parse_qs(urlparse(self.path).query)
+            query = args["query"][0]
+            page = int(args["page"][0]) if "page" in args else 0
+            page_size = int(args["page_size"][0]) if "page_size" in args else 50
+            self.wfile.write(bytes(f'<div id="imagecontainer" onkeydown="inputEventHandler()">{create_image_string(query, True, page, page_size)}</div>', "utf-8"))
         elif image_regex.match(self.path):
             self.send_response(200)
             self.end_headers()

@@ -32,14 +32,44 @@
         }
     </style>
     <script>
+        let page = 0;
+        let page_size = 50;
         function search() {
             let searchtext = document.getElementById('searchtext').value
-            let imagecontainer = document.getElementById('imagecontainer').remove()
-            fetch('search?query=' + searchtext)
+            document.getElementById('imagecontainer').remove()
+            page_size = typeof (page_size) === "undefined" ? 50 : page_size
+            urlsp = new URLSearchParams({
+                query: searchtext,
+                page: typeof (page) === "undefined" ? 0 : page,
+                page_size: page_size
+            })
+            fetch('search?' + urlsp.toString())
                 .then(response => response.text())
                 .then(text => new DOMParser().parseFromString(text, 'text/html'))
                 .then(html_like => html_like.getElementsByTagName('div')[0])
                 .then(div => document.body.appendChild(div))
+
+            nextpagevalidp = new URLSearchParams({
+                query: searchtext,
+                page: typeof (page) === "undefined" ? 0 : (page + 1) * page_size,
+                page_size: 1
+            })
+            fetch('search?' + nextpagevalidp.toString())
+                .then(response => response.text())
+                .then(text => new DOMParser().parseFromString(text, 'text/html'))
+                .then(html_like => html_like.getElementsByTagName('div')[0])
+                .then(div => {
+                    if (div.getElementsByTagName('img').length === 0) {
+                        document.getElementsByTagName('button')[1].disabled = true
+                    } else {
+                        document.getElementsByTagName('button')[1].disabled = false
+                    }
+                })
+            if (page === 0) {
+                document.getElementsByTagName('button')[0].disabled = true
+            } else {
+                document.getElementsByTagName('button')[0].disabled = false
+            }
         }
 
         function inputEventHandler(event) {
@@ -48,6 +78,16 @@
                 search()
             }
         }
+
+        function previousPage() {
+            page = Math.max(page - 1, 0)
+            search()
+        }
+
+        function nextPage() {
+            page = page + 1
+            search()
+        }
     </script>
 </head>
 
@@ -55,6 +95,8 @@
     <div>
         <textarea id="searchtext" onkeydown="inputEventHandler(event)"></textarea>
     </div>
+    <button onclick="previousPage()" disabled>Previous</button>
+    <button onclick="nextPage()" disabled>Next</button>
     <div id="imagecontainer"><br></div>
 </body>
 
