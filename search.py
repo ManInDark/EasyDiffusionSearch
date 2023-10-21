@@ -15,14 +15,14 @@ cursor.row_factory = sqlite3.Row
 def get_1024x512_images():
     return cursor.execute("SELECT path FROM image WHERE width = '512' AND height = '1024'").fetchall()
 
-def search(query: str, page: int = 0, page_size: int = 50):
+def search(query: str, page: int = 0, page_size: int = 30):
     return cursor.execute(f"SELECT * FROM image WHERE {query} LIMIT {page_size} OFFSET {page * page_size}").fetchall()
 
 def read_site() -> str:
     with open("searchsite.html", "r") as f:
         return "".join(f.readlines())
 
-def create_image_string(query: str, local=False, page: int = 0, page_size: int = 50) -> str:
+def create_image_string(query: str, local=False, page: int = 0, page_size: int = 30) -> str:
     results = search(query, page, page_size)
     sum_string = ""
 

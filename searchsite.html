@@ -33,11 +33,31 @@
     </style>
     <script>
         let page = 0;
-        let page_size = 50;
+        let page_size = 30;
+        document.addEventListener("DOMContentLoaded", function(event) {
+            if (localStorage.getItem("searchtext") !== null) {
+                document.getElementById('searchtext').value = localStorage.getItem("searchtext")
+                search()
+            } else {
+                resetSearch()
+            }
+        });
+
+        function resetSearch() {
+            defaultsearchtext = "1 order by creation_time desc"
+            if (document.getElementById('searchtext').value === defaultsearchtext) {
+                return
+            }
+            localStorage.removeItem("searchtext")
+            document.getElementById('searchtext').value = defaultsearchtext
+            search()
+        }
+
         function search() {
             let searchtext = document.getElementById('searchtext').value
+            localStorage.setItem("searchtext", searchtext)
             document.getElementById('imagecontainer').remove()
-            page_size = typeof (page_size) === "undefined" ? 50 : page_size
+            page_size = typeof (page_size) === "undefined" ? 30 : page_size
             urlsp = new URLSearchParams({
                 query: searchtext,
                 page: typeof (page) === "undefined" ? 0 : page,
@@ -60,15 +80,15 @@
                 .then(html_like => html_like.getElementsByTagName('div')[0])
                 .then(div => {
                     if (div.getElementsByTagName('img').length === 0) {
-                        document.getElementsByTagName('button')[1].disabled = true
+                        document.querySelector('button[onclick="nextPage()"]').disabled = true
                     } else {
-                        document.getElementsByTagName('button')[1].disabled = false
+                        document.querySelector('button[onclick="nextPage()"]').disabled = false
                     }
                 })
             if (page === 0) {
-                document.getElementsByTagName('button')[0].disabled = true
+                document.querySelector('button[onclick="previousPage()"]').disabled = true
             } else {
-                document.getElementsByTagName('button')[0].disabled = false
+                document.querySelector('button[onclick="previousPage()"]').disabled = false
             }
         }
 
@@ -95,6 +115,7 @@
     <div>
         <textarea id="searchtext" onkeydown="inputEventHandler(event)"></textarea>
     </div>
+    <button onclick="resetSearch()">Reset</button>
     <button onclick="previousPage()" disabled>Previous</button>
     <button onclick="nextPage()" disabled>Next</button>
     <div id="imagecontainer"><br></div>
