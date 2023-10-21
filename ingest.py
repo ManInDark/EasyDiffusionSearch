@@ -63,8 +63,8 @@ def test_extensions(path: str) -> tuple[bool, str]:
     else:
         return (False, path)
 
-def figure_out_image_path(folder, file, face_correction, upscaling):
-    img_path = os.path.join(IMAGE_ROOT_PATH, folder, file)
+def figure_out_image_path(file, face_correction, upscaling):
+    img_path = file
     res = test_extensions(img_path)
     if not res[0]:
         if not face_correction == "None": # face correction
@@ -78,34 +78,34 @@ def figure_out_image_path(folder, file, face_correction, upscaling):
             exit()
     return res[1]
 
-async def parse_txt_file_async(folder, txtfile):
-    with open(os.path.join(IMAGE_ROOT_PATH, folder, txtfile), "r") as file:
+async def parse_txt_file_async(txtfile):
+    with open(txtfile.path, "r") as file:
         lines = file.readlines()
         parsed_content = parse_lines(lines)
-        img_path = figure_out_image_path(folder, txtfile.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
+        img_path = figure_out_image_path(txtfile.path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
         if not check_if_image_in_database(img_path):
             insert_image(img_path, *parsed_content)
 
-async def parse_json_file_async(folder, jsonfile):
+async def parse_json_file_async(jsonfile):
     import json
-    with open(os.path.join(IMAGE_ROOT_PATH, folder, jsonfile), "r") as file:
+    with open(jsonfile.path, "r") as file:
         content = "".join(file.readlines())
         parsed_content = json.loads(content)
-        img_path = figure_out_image_path(folder, jsonfile.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
+        img_path = figure_out_image_path(jsonfile.path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
         if not check_if_image_in_database(img_path):
             insert_image(img_path, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 tasklist = []
 async def main():
-    for folder in os.listdir(IMAGE_ROOT_PATH):
+    for folder in os.scandir(IMAGE_ROOT_PATH):
         if not os.path.isdir(os.path.join(IMAGE_ROOT_PATH, folder)):
             continue
-        for file in os.listdir(os.path.join(IMAGE_ROOT_PATH, folder)):
-            if file.endswith(".txt"):
+        for file in os.scandir(os.path.join(IMAGE_ROOT_PATH, folder)):
+            if file.name.endswith(".txt"):
                 tasklist.append(asyncio.create_task(parse_txt_file_async(folder, file)))
-            elif file.endswith(".json"):
+            elif file.name.endswith(".json"):
                 tasklist.append(asyncio.create_task(parse_json_file_async(folder, file)))
     await asyncio.gather(*tasklist)
     print("Done")
