@@ -10,6 +10,7 @@ with open("config.json", "r") as f:
 import sqlite3
 connection = sqlite3.connect("database.db")
 cursor = connection.cursor()
+cursor.row_factory = sqlite3.Row
 
 def get_1024x512_images():
     return cursor.execute("SELECT path FROM image WHERE width = '512' AND height = '1024'").fetchall()
@@ -26,7 +27,7 @@ def create_image_string(query: str, local=False, page: int = 0, page_size: int =
     sum_string = ""
 
     for result in results:
-        options = f"Path: {result[0].replace(IMAGE_ROOT_PATH, '').strip('/')}\nPrompt: {result[1]}\nNegative Prompt: {result[2]}\nSeed: {result[3]}\nModel: {result[4]}\nSize: {result[5]}x{result[6]}\nSampler: {result[7]}\nSteps: {result[8]}\nGuidance Scale: {result[9]}\nLoRA: {result[10]}\nUpscaling: {result[11]}\nFace Correction: {result[12]}\n"
+        options = f"Path: {result['path'].replace(IMAGE_ROOT_PATH, '').strip('/')}\nCreation Time: {result['creation_time']}\nPrompt: {result['prompt']}\nNegative Prompt: {result['negative_prompt']}\nSeed: {result['seed']}\nModel: {result['model']}\nSize: {result['width']}x{result['height']}\nSampler: {result['sampler']}\nSteps: {result['steps']}\nGuidance Scale: {result['guidance_scale']}\nLoRA: {result['lora']}\nUpscaling: {result['upscaling']}\nFace Correction: {result['face_correction']}\n"
         sum_string += f"<img src='{result[0].replace(IMAGE_ROOT_PATH, '').strip('/') if local else result[0]}' title='{options}'>\n"
     return sum_string
 

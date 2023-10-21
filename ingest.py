@@ -14,13 +14,13 @@ cursor = connection.cursor()
 import asyncio
 
 if ("image",) not in cursor.execute("SELECT name FROM sqlite_master"):
-    cursor.execute("CREATE TABLE image(path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction)")
+    cursor.execute("CREATE TABLE image(path, creation_time, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction)")
     print("Created Table, as it did not exist yet")
 
-def insert_image(path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction):
+def insert_image(path, creation_time, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction):
     if isinstance(lora, list):
         lora = " ".join(lora)
-    cursor.execute("INSERT INTO image VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (path, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction))
+    cursor.execute("INSERT INTO image VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (path, creation_time, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction))
     connection.commit()
 
 def check_if_image_in_database(path):
@@ -78,16 +78,16 @@ def figure_out_image_path(file, face_correction, upscaling):
             exit()
     return res[1]
 
-async def parse_txt_file_async(txtfile):
+async def parse_txt_file_async(txtfile: os.DirEntry):
     with open(txtfile.path, "r") as file:
         lines = file.readlines()
         parsed_content = parse_lines(lines)
         img_path = figure_out_image_path(txtfile.path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
         if not check_if_image_in_database(img_path):
-            insert_image(img_path, *parsed_content)
+            insert_image(img_path, txtfile.stat().st_ctime, *parsed_content)
 
-async def parse_json_file_async(jsonfile):
+async def parse_json_file_async(jsonfile: os.DirEntry):
     import json
     with open(jsonfile.path, "r") as file:
         content = "".join(file.readlines())
@@ -95,7 +95,7 @@ async def parse_json_file_async(jsonfile):
         img_path = figure_out_image_path(jsonfile.path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
         if not check_if_image_in_database(img_path):
-            insert_image(img_path, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
+            insert_image(img_path, jsonfile.stat().st_ctime, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 tasklist = []
 async def main():
@@ -104,9 +104,9 @@ async def main():
             continue
         for file in os.scandir(os.path.join(IMAGE_ROOT_PATH, folder)):
             if file.name.endswith(".txt"):
-                tasklist.append(asyncio.create_task(parse_txt_file_async(folder, file)))
+                tasklist.append(asyncio.create_task(parse_txt_file_async(file)))
             elif file.name.endswith(".json"):
-                tasklist.append(asyncio.create_task(parse_json_file_async(folder, file)))
+                tasklist.append(asyncio.create_task(parse_json_file_async(file)))
     await asyncio.gather(*tasklist)
     print("Done")
     
