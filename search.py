@@ -16,7 +16,10 @@ def get_1024x512_images():
     return cursor.execute("SELECT path FROM image WHERE width = '512' AND height = '1024'").fetchall()
 
 def search(query: str, page: int = 0, page_size: int = 30):
-    return cursor.execute(f"SELECT * FROM image WHERE {query} LIMIT {page_size} OFFSET {page * page_size}").fetchall()
+    try:
+        return cursor.execute(f"SELECT * FROM image WHERE {query} LIMIT {page_size} OFFSET {page * page_size}").fetchall()
+    except sqlite3.OperationalError:
+        return []
 
 def read_site() -> str:
     with open("searchsite.html", "r") as f:
