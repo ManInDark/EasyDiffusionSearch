@@ -35,6 +35,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 page = int(args["page"][0]) if "page" in args else 0
                 page_size = int(args["page_size"][0]) if "page_size" in args else 30
                 self.wfile.write(bytes(f'<div id="imagecontainer" onkeydown="inputEventHandler()">{create_image_string(query, True, page, page_size)}</div>', "utf-8"))
+            elif self.path.startswith("/refresh"):
+                self.send_response(200)
+                self.end_headers()
+                from ingest import main
+                from asyncio import run
+                run(main())
             elif image_regex.match(self.path):
                 self.send_response(200)
                 self.headers["Cache-Control"] = "max-age=31536000"

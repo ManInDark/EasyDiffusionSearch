@@ -53,6 +53,10 @@
             search()
         }
 
+	function refresh() {
+		fetch("refresh")
+	}
+
         function search() {
             let searchtext = document.getElementById('searchtext').value
             localStorage.setItem("searchtext", searchtext)
@@ -116,6 +120,7 @@
         <textarea id="searchtext" onkeydown="inputEventHandler(event)"></textarea>
     </div>
     <button onclick="resetSearch()">Reset</button>
+    <button onclick="refresh()">Refresh</button>
     <button onclick="previousPage()" disabled>Previous</button>
     <button onclick="nextPage()" disabled>Next</button>
     <div id="imagecontainer"><br></div>

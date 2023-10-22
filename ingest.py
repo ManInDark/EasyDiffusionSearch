@@ -97,8 +97,8 @@ async def parse_json_file_async(jsonfile: os.DirEntry):
         if not check_if_image_in_database(img_path):
             insert_image(img_path, jsonfile.stat().st_ctime, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
-tasklist = []
 async def main():
+    tasklist = []
     for folder in os.scandir(IMAGE_ROOT_PATH):
         if not os.path.isdir(os.path.join(IMAGE_ROOT_PATH, folder)):
             continue
