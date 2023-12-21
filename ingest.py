@@ -64,6 +64,10 @@ def test_extensions(path: str) -> tuple[bool, str]:
         return (False, path)
 
 def figure_out_image_path(file, face_correction, upscaling):
+    """
+    Returns the path to the image. Will return None if image path not valid
+    """
+
     img_path = file
     res = test_extensions(img_path)
     if not res[0]:
@@ -75,26 +79,39 @@ def figure_out_image_path(file, face_correction, upscaling):
         if not res[0]:
             print("Could not find file")
             print(face_correction, upscaling, img_path)
-            exit()
+            return None
     return res[1]
 
 async def parse_txt_file_async(txtfile: os.DirEntry):
     with open(txtfile.path, "r") as file:
         lines = file.readlines()
+        # This needs much better validation for detecting if it's a true metadata file, aswell as optional keys like use_lora_model
+        if lines.__len__() <= 0:
+            return
+
         parsed_content = parse_lines(lines)
         img_path = figure_out_image_path(txtfile.path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
-        if not check_if_image_in_database(img_path):
+        if img_path is not None and not check_if_image_in_database(img_path):
             insert_image(img_path, txtfile.stat().st_ctime, *parsed_content)
 
 async def parse_json_file_async(jsonfile: os.DirEntry):
     import json
     with open(jsonfile.path, "r") as file:
-        content = "".join(file.readlines())
+        lines = file.readlines()
+        # This needs much better validation for detecting if it's a true metadata file
+        if lines.__len__() <= 0:
+            return
+
+        content = "".join(lines)
         parsed_content = json.loads(content)
+        if "use_lora_model" not in parsed_content:
+            parsed_content["use_lora_model"] = []
+            #parsed_content["lora_alpha"] = []
+
         img_path = figure_out_image_path(jsonfile.path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
-        if not check_if_image_in_database(img_path):
+        if img_path is not None and not check_if_image_in_database(img_path):
             insert_image(img_path, jsonfile.stat().st_ctime, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 async def main():
