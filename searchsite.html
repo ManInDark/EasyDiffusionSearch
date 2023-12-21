@@ -37,11 +37,41 @@
         document.addEventListener("DOMContentLoaded", function(event) {
             if (localStorage.getItem("searchtext") !== null) {
                 document.getElementById('searchtext').value = localStorage.getItem("searchtext")
+                document.getElementById('simplesearch').checked = localStorage.getItem("simplesearch") === "true"
                 search()
             } else {
                 resetSearch()
             }
         });
+
+        function convertSearch(simplesearch = "") {
+            let width = null;
+            let height = null;
+            if (simplesearch.includes("w") && simplesearch.match(/w(\d+)/) !== null) {
+                width = simplesearch.match(/w(\d+)/)[1];
+                simplesearch = simplesearch.replaceAll(/w(\d+)/g, "");
+            }
+            if (simplesearch.includes("h") && simplesearch.match(/h(\d+)/) !== null) {
+                height = simplesearch.match(/h(\d+)/)[1];
+                simplesearch = simplesearch.replaceAll(/h(\d+)/g, "");
+            }
+            if (simplesearch.includes("x") && simplesearch.match(/(\d+)x(\d+)/) !== null) {
+                matches = simplesearch.match(/(\d+)x(\d+)/);
+                width = matches[1];
+                height = matches[2];
+                simplesearch = simplesearch.replaceAll(/(\d+)x(\d+)/g, "");
+            }
+            simplesearch = simplesearch.trim()
+            simplesearch = "(prompt like '%" + simplesearch + "%' OR lora like '%" + simplesearch + "%')";
+            if (width !== null) {
+                simplesearch += " AND width=" + width;
+            }
+            if (height !== null) {
+                simplesearch += " AND height=" + height;
+            }
+            console.log(simplesearch)
+            return simplesearch;
+        }
 
         function resetSearch() {
             defaultsearchtext = "1 order by creation_time desc"
@@ -49,6 +79,7 @@
                 return
             }
             localStorage.removeItem("searchtext")
+            localStorage.removeItem("simplesearch")
             document.getElementById('searchtext').value = defaultsearchtext
             search()
         }
@@ -59,14 +90,15 @@
 
         function search() {
             let searchtext = document.getElementById('searchtext').value
-            if (searchtext === localStorage.getItem("searchtext")) {
-                localStorage.setItem("searchtext", searchtext);
-            } else {
+            let simplesearch = document.getElementById('simplesearch').checked
+            localStorage.setItem("searchtext", searchtext);
+            localStorage.setItem("simplesearch", simplesearch);
+            if (!searchtext === localStorage.getItem("searchtext")) {
                 page = 0;
             }
             page_size = typeof (page_size) === "undefined" ? 30 : page_size
             urlsp = new URLSearchParams({
-                query: searchtext,
+                query: (simplesearch) ? convertSearch(searchtext) : searchtext,
                 page: typeof (page) === "undefined" ? 0 : page,
                 page_size: page_size
             })
@@ -122,6 +154,8 @@
     <div>
         <textarea id="searchtext" onkeydown="inputEventHandler(event)"></textarea>
     </div>
+    <input type="checkbox" id="simplesearch" name="simplesearch" value="simplesearch">
+    <label for="simplesearch">Simple Search</label>
     <button onclick="resetSearch()">Reset</button>
     <button onclick="refresh()">Refresh</button>
     <button onclick="previousPage()" disabled>Previous</button>
