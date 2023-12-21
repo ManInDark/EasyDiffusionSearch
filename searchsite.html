@@ -69,6 +69,7 @@
             if (height !== null) {
                 simplesearch += " AND height=" + height;
             }
+            simplesearch += " ORDER BY creation_time DESC"
             console.log(simplesearch)
             return simplesearch;
         }
