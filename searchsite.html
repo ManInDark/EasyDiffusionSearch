@@ -114,7 +114,7 @@
                 .then(div => document.getElementById('imagecontainer').replaceWith(div))
 
             nextpagevalidp = new URLSearchParams({
-                query: searchtext,
+                query: (simplesearch) ? convertSearch(searchtext) : searchtext,
                 page: typeof (page) === "undefined" ? 0 : (page + 1) * page_size,
                 page_size: 1
             })
