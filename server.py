@@ -17,7 +17,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import re
 
-image_regex = re.compile('/\d+/')
+image_regex = re.compile('[/\\\\]\d+[/\\\\]')
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
