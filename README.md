@@ -24,6 +24,7 @@ The query needs to be a SQL WHERE clause in a table with the columns: path, crea
 Examples:
 
 ```
+1 order by creation_time desc
 width = 512 AND height = 512
 prompt like '%astronaut%'
 model like '%sd%'

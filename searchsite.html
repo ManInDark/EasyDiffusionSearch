@@ -53,14 +53,17 @@
             search()
         }
 
-	function refresh() {
-		fetch("refresh")
-	}
+        function refresh() {
+            fetch("refresh")
+        }
 
         function search() {
             let searchtext = document.getElementById('searchtext').value
-            localStorage.setItem("searchtext", searchtext)
-            document.getElementById('imagecontainer').remove()
+            if (searchtext === localStorage.getItem("searchtext")) {
+                localStorage.setItem("searchtext", searchtext);
+            } else {
+                page = 0;
+            }
             page_size = typeof (page_size) === "undefined" ? 30 : page_size
             urlsp = new URLSearchParams({
                 query: searchtext,
@@ -71,7 +74,7 @@
                 .then(response => response.text())
                 .then(text => new DOMParser().parseFromString(text, 'text/html'))
                 .then(html_like => html_like.getElementsByTagName('div')[0])
-                .then(div => document.body.appendChild(div))
+                .then(div => document.getElementById('imagecontainer').replaceWith(div))
 
             nextpagevalidp = new URLSearchParams({
                 query: searchtext,
@@ -84,15 +87,15 @@
                 .then(html_like => html_like.getElementsByTagName('div')[0])
                 .then(div => {
                     if (div.getElementsByTagName('img').length === 0) {
-                        document.querySelector('button[onclick="nextPage()"]').disabled = true
+                        document.querySelectorAll('button[onclick="nextPage()"]').forEach(btn => btn.disabled = true);
                     } else {
-                        document.querySelector('button[onclick="nextPage()"]').disabled = false
+                        document.querySelectorAll('button[onclick="nextPage()"]').forEach(btn => btn.disabled = false);
                     }
                 })
             if (page === 0) {
-                document.querySelector('button[onclick="previousPage()"]').disabled = true
+                document.querySelectorAll('button[onclick="previousPage()"]').forEach(btn => btn.disabled = true);
             } else {
-                document.querySelector('button[onclick="previousPage()"]').disabled = false
+                document.querySelectorAll('button[onclick="previousPage()"]').forEach(btn => btn.disabled = false);
             }
         }
 
@@ -124,6 +127,8 @@
     <button onclick="previousPage()" disabled>Previous</button>
     <button onclick="nextPage()" disabled>Next</button>
     <div id="imagecontainer"><br></div>
+    <button onclick="previousPage()" disabled>Previous</button>
+    <button onclick="nextPage()" disabled>Next</button>
 </body>
 
 </html>
