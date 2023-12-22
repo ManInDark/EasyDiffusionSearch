@@ -19,6 +19,11 @@
             color: white;
         }
 
+        .pagecounter {
+            color: white;
+            display: inline;
+        }
+
         #imagecontainer {
             display: flex;
             justify-content: space-around;
@@ -94,6 +99,7 @@
         }
 
         function search() {
+            document.querySelectorAll('.pagecounter').forEach(p => p.innerText = page)
             let searchtext = document.getElementById('searchtext').value
             let simplesearch = document.getElementById('simplesearch').checked
             localStorage.setItem("searchtext", searchtext);
@@ -164,9 +170,11 @@
     <button onclick="resetSearch()">Reset</button>
     <button onclick="refresh()">Refresh</button>
     <button onclick="previousPage()" disabled>Previous</button>
+    <p class="pagecounter">0</p>
     <button onclick="nextPage()" disabled>Next</button>
     <div id="imagecontainer"><br></div>
     <button onclick="previousPage()" disabled>Previous</button>
+    <p class="pagecounter">0</p>
     <button onclick="nextPage()" disabled>Next</button>
 </body>
 
