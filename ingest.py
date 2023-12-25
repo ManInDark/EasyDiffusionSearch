@@ -2,10 +2,32 @@ import os
 if not os.path.isfile("config.json"):
     print("config.json not found, please create one")
     exit()
+    
+import datetime
+import time
+DATE_FORMAT = "%Y-%m-%d"
+def convert_date_string_to_unix(s: str):
+    date = datetime.datetime.strptime(s, DATE_FORMAT)
+    date = datetime.datetime(date.year, date.month, date.day, tzinfo=datetime.timezone.utc) # Extra reconverting required https://github.com/python/cpython/issues/94757
+    return date.timestamp()
+
+LAST_SCANNED_FOLDER_DATE_DEFAULT_CONFIG_VALUE = datetime.datetime(1970, 1, 1).strftime(DATE_FORMAT)
+LAST_SCANNED_FOLDER_DATE_DEFAULT = convert_date_string_to_unix(LAST_SCANNED_FOLDER_DATE_DEFAULT_CONFIG_VALUE)
+ONE_DAY = 60 * 60 * 24
 
 import json
 with open("config.json", "r") as f:
-    IMAGE_ROOT_PATH = json.load(f)["image-path"]
+    data = json.load(f)
+    IMAGE_ROOT_PATH = data["image-path"]
+    # Added in an update
+    if "last-scanned-folder-date" not in data:
+        data["last-scanned-folder-date"] = LAST_SCANNED_FOLDER_DATE_DEFAULT_CONFIG_VALUE
+
+    LAST_SCANNED_FOLDER_DATE = convert_date_string_to_unix(data["last-scanned-folder-date"])
+
+def update_config():
+    with open("config.json", "w") as f:
+        json.dump(data, f, indent=4, sort_keys=True)
 
 import sqlite3
 connection = sqlite3.connect("database.db")
@@ -15,6 +37,7 @@ import asyncio
 
 if ("image",) not in cursor.execute("SELECT name FROM sqlite_master"):
     cursor.execute("CREATE TABLE image(path, creation_time, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction)")
+    LAST_SCANNED_FOLDER_DATE = LAST_SCANNED_FOLDER_DATE_DEFAULT # Force ingest
     print("Created Table, as it did not exist yet")
 
 def insert_image(path, creation_time, prompt, negative_prompt, seed, model, width, height, sampler, steps, guidance_scale, lora, upscaling, face_correction):
@@ -116,15 +139,38 @@ async def parse_json_file_async(jsonfile: os.DirEntry):
 
 async def main():
     tasklist = []
+    last_date = 0
+    
+    scanned_day = data["last-scanned-folder-date"]
+    print(f"Scanning all directories created on the same day and after {scanned_day}. (This can be changed in config.json with \"last-scanned-folder-date\", YYYY-MM-DD format)")
+
     for folder in os.scandir(IMAGE_ROOT_PATH):
-        if not os.path.isdir(os.path.join(IMAGE_ROOT_PATH, folder)):
+        folder_path = os.path.join(IMAGE_ROOT_PATH, folder)
+        if not os.path.isdir(folder_path):
             continue
-        for file in os.scandir(os.path.join(IMAGE_ROOT_PATH, folder)):
+
+        for file in os.scandir(folder_path):
+            file_date = os.path.getctime(file)
+            file_date = (file_date // ONE_DAY) * ONE_DAY # Truncate to day
+
+            # Allow re-scanning files on the same day they are created
+            if file_date < LAST_SCANNED_FOLDER_DATE:
+                continue
+
+            if last_date <= file_date:
+                last_date = file_date
+
             if file.name.endswith(".txt"):
                 tasklist.append(asyncio.create_task(parse_txt_file_async(file)))
             elif file.name.endswith(".json"):
                 tasklist.append(asyncio.create_task(parse_json_file_async(file)))
     await asyncio.gather(*tasklist)
+    # Only update if new files were actually added
+    if tasklist.__len__() > 0:
+        next_date = datetime.datetime.fromtimestamp(last_date).strftime(DATE_FORMAT)
+        data["last-scanned-folder-date"] = next_date
+        update_config()
+        print(f"Next scan date set to {next_date}")
     print("Done")
     
 
