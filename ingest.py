@@ -23,7 +23,11 @@ with open("config.json", "r") as f:
     if "last-scanned-folder-date" not in data:
         data["last-scanned-folder-date"] = LAST_SCANNED_FOLDER_DATE_DEFAULT_CONFIG_VALUE
 
-    LAST_SCANNED_FOLDER_DATE = convert_date_string_to_unix(data["last-scanned-folder-date"])
+    try:
+        LAST_SCANNED_FOLDER_DATE = convert_date_string_to_unix(data["last-scanned-folder-date"])
+    except:
+        print("Failed to read \"last-scanned-folder-date\" from config.json, make sure it's a string in YYYY-MM-DD format, for example 2023-12-31")
+        exit()
 
 def update_config():
     with open("config.json", "w") as f:
