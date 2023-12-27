@@ -21,6 +21,12 @@ def search(query: str, page: int = 0, page_size: int = 30):
     except sqlite3.OperationalError:
         return []
 
+def count(query: str) -> int:
+    try:
+        return cursor.execute(f"SELECT COUNT(*) FROM image WHERE {query}").fetchone()[0]
+    except sqlite3.OperationalError:
+        return -1
+
 def read_site() -> str:
     with open("searchsite.html", "r") as f:
         return "".join(f.readlines())

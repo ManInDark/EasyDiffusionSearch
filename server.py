@@ -10,7 +10,7 @@ with open("config.json", "r") as f:
 with open("searchsite.html", "r") as f:
     website = "".join(f.readlines())
 
-from search import create_image_string
+from search import create_image_string, count
 
 # simple http server
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -35,6 +35,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 page = int(args["page"][0]) if "page" in args else 0
                 page_size = int(args["page_size"][0]) if "page_size" in args else 30
                 self.wfile.write(bytes(f'<div id="imagecontainer" onkeydown="inputEventHandler()">{create_image_string(query, True, page, page_size)}</div>', "utf-8"))
+            elif self.path.startswith("/count"):
+                self.send_response(200)
+                self.end_headers()
+                args = parse_qs(urlparse(self.path).query)
+                query = args["query"][0]
+                self.wfile.write(bytes(str(count(query)), "utf-8"))
             elif self.path.startswith("/refresh"):
                 self.send_response(200)
                 self.end_headers()

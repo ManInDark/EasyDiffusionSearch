@@ -19,7 +19,7 @@
             color: white;
         }
 
-        .pagecounter {
+        .counter {
             color: white;
             display: inline;
         }
@@ -84,13 +84,10 @@
         }
 
         function resetSearch() {
-            defaultsearchtext = "1 order by creation_time desc"
-            if (document.getElementById('searchtext').value === defaultsearchtext) {
-                return
-            }
             localStorage.removeItem("searchtext")
             localStorage.removeItem("simplesearch")
-            document.getElementById('searchtext').value = defaultsearchtext
+            document.getElementById('searchtext').value = "1 order by creation_time desc"
+            document.getElementById('simplesearch').checked = false
             search()
         }
 
@@ -99,7 +96,7 @@
         }
 
         function search() {
-            document.querySelectorAll('.pagecounter').forEach(p => p.innerText = page)
+            document.querySelectorAll('.page.counter').forEach(p => p.innerText = page)
             let searchtext = document.getElementById('searchtext').value
             let simplesearch = document.getElementById('simplesearch').checked
             localStorage.setItem("searchtext", searchtext);
@@ -118,6 +115,13 @@
                 .then(text => new DOMParser().parseFromString(text, 'text/html'))
                 .then(html_like => html_like.getElementsByTagName('div')[0])
                 .then(div => document.getElementById('imagecontainer').replaceWith(div))
+
+            urlsp = new URLSearchParams({
+                query: (simplesearch) ? convertSearch(searchtext) : searchtext,
+            })
+            fetch('count?' + urlsp.toString())
+                .then(response => response.text())
+                .then(amount => document.querySelectorAll('.result.counter')[0].innerText = amount)
 
             nextpagevalidp = new URLSearchParams({
                 query: (simplesearch) ? convertSearch(searchtext) : searchtext,
@@ -170,11 +174,12 @@
     <button onclick="resetSearch()">Reset</button>
     <button onclick="refresh()">Refresh</button>
     <button onclick="previousPage()" disabled>Previous</button>
-    <p class="pagecounter">0</p>
+    <p class="page counter">0</p>
     <button onclick="nextPage()" disabled>Next</button>
+    <p class="result counter">-1</p>
     <div id="imagecontainer"><br></div>
     <button onclick="previousPage()" disabled>Previous</button>
-    <p class="pagecounter">0</p>
+    <p class="page counter">0</p>
     <button onclick="nextPage()" disabled>Next</button>
 </body>
 
