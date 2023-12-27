@@ -109,7 +109,7 @@ def figure_out_image_path(file, face_correction, upscaling):
             return None
     return res[1]
 
-async def parse_txt_file_async(txtfile_path: str, txtfile_date: str):
+async def parse_txt_file_async(txtfile_path: str, txtfile_time: str):
     with open(txtfile_path, "r") as file:
         lines = file.readlines()
         # This needs much better validation for detecting if it's a true metadata file, aswell as optional keys like use_lora_model
@@ -120,9 +120,9 @@ async def parse_txt_file_async(txtfile_path: str, txtfile_date: str):
         img_path = figure_out_image_path(txtfile_path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
         if img_path is not None and not check_if_image_in_database(img_path):
-            insert_image(img_path, txtfile_date, *parsed_content)
+            insert_image(img_path, txtfile_time, *parsed_content)
 
-async def parse_json_file_async(jsonfile_path: str, jsonfile_date: str):
+async def parse_json_file_async(jsonfile_path: str, jsonfile_time: str):
     import json
     with open(jsonfile_path, "r") as file:
         lines = file.readlines()
@@ -139,7 +139,7 @@ async def parse_json_file_async(jsonfile_path: str, jsonfile_date: str):
         img_path = figure_out_image_path(jsonfile_path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
         if img_path is not None and not check_if_image_in_database(img_path):
-            insert_image(img_path, jsonfile_date, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
+            insert_image(img_path, jsonfile_time, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 async def main():
     tasklist = []
@@ -151,8 +151,8 @@ async def main():
     for root, directories, file_names in os.walk(IMAGE_ROOT_PATH):
         for file_name in file_names:
             file_path = os.path.join(root, file_name)
-            file_date = os.path.getctime(file_path)
-            file_date = (file_date // ONE_DAY) * ONE_DAY # Truncate to day
+            file_time = os.path.getctime(file_path)
+            file_date = (file_time // ONE_DAY) * ONE_DAY # Truncate to day
 
             # Allow re-scanning files on the same day they are created
             if file_date < LAST_SCANNED_FOLDER_DATE:
@@ -162,9 +162,9 @@ async def main():
                 last_date = file_date
 
             if file_name.endswith(".txt"):
-                tasklist.append(asyncio.create_task(parse_txt_file_async(file_path, file_date)))
+                tasklist.append(asyncio.create_task(parse_txt_file_async(file_path, file_time)))
             elif file_name.endswith(".json"):
-                tasklist.append(asyncio.create_task(parse_json_file_async(file_path, file_date)))
+                tasklist.append(asyncio.create_task(parse_json_file_async(file_path, file_time)))
     await asyncio.gather(*tasklist)
     # Only update if new files were actually added
     if tasklist.__len__() > 0:
