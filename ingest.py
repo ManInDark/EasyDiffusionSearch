@@ -109,22 +109,22 @@ def figure_out_image_path(file, face_correction, upscaling):
             return None
     return res[1]
 
-async def parse_txt_file_async(txtfile: os.DirEntry):
-    with open(txtfile.path, "r") as file:
+async def parse_txt_file_async(txtfile_path: str, txtfile_date: str):
+    with open(txtfile_path, "r") as file:
         lines = file.readlines()
         # This needs much better validation for detecting if it's a true metadata file, aswell as optional keys like use_lora_model
         if lines.__len__() <= 0:
             return
 
         parsed_content = parse_lines(lines)
-        img_path = figure_out_image_path(txtfile.path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
+        img_path = figure_out_image_path(txtfile_path.replace(".txt", ".extension"), parsed_content[11], parsed_content[10])
 
         if img_path is not None and not check_if_image_in_database(img_path):
-            insert_image(img_path, txtfile.stat().st_ctime, *parsed_content)
+            insert_image(img_path, txtfile_date, *parsed_content)
 
-async def parse_json_file_async(jsonfile: os.DirEntry):
+async def parse_json_file_async(jsonfile_path: str, jsonfile_date: str):
     import json
-    with open(jsonfile.path, "r") as file:
+    with open(jsonfile_path, "r") as file:
         lines = file.readlines()
         # This needs much better validation for detecting if it's a true metadata file
         if lines.__len__() <= 0:
@@ -136,25 +136,22 @@ async def parse_json_file_async(jsonfile: os.DirEntry):
             parsed_content["use_lora_model"] = []
             #parsed_content["lora_alpha"] = []
 
-        img_path = figure_out_image_path(jsonfile.path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
+        img_path = figure_out_image_path(jsonfile_path.replace(".json", ".extension"), parsed_content["use_face_correction"], parsed_content["use_upscale"])
 
         if img_path is not None and not check_if_image_in_database(img_path):
-            insert_image(img_path, jsonfile.stat().st_ctime, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
+            insert_image(img_path, jsonfile_date, parsed_content["prompt"], parsed_content["negative_prompt"], parsed_content["seed"], parsed_content["use_stable_diffusion_model"], parsed_content["width"], parsed_content["height"], parsed_content["sampler_name"], parsed_content["num_inference_steps"], parsed_content["guidance_scale"], parsed_content["use_lora_model"], parsed_content["use_upscale"], parsed_content["use_face_correction"])
 
 async def main():
     tasklist = []
     last_date = 0
     
-    scanned_day = data["last-scanned-folder-date"]
+    scanned_day = datetime.datetime.fromtimestamp(LAST_SCANNED_FOLDER_DATE).strftime(DATE_FORMAT)
     print(f"Scanning all directories created on the same day and after {scanned_day}. (This can be changed in config.json with \"last-scanned-folder-date\", YYYY-MM-DD format)")
 
-    for folder in os.scandir(IMAGE_ROOT_PATH):
-        folder_path = os.path.join(IMAGE_ROOT_PATH, folder)
-        if not os.path.isdir(folder_path):
-            continue
-
-        for file in os.scandir(folder_path):
-            file_date = os.path.getctime(file)
+    for root, directories, file_names in os.walk(IMAGE_ROOT_PATH):
+        for file_name in file_names:
+            file_path = os.path.join(root, file_name)
+            file_date = os.path.getctime(file_path)
             file_date = (file_date // ONE_DAY) * ONE_DAY # Truncate to day
 
             # Allow re-scanning files on the same day they are created
@@ -164,10 +161,10 @@ async def main():
             if last_date <= file_date:
                 last_date = file_date
 
-            if file.name.endswith(".txt"):
-                tasklist.append(asyncio.create_task(parse_txt_file_async(file)))
-            elif file.name.endswith(".json"):
-                tasklist.append(asyncio.create_task(parse_json_file_async(file)))
+            if file_name.endswith(".txt"):
+                tasklist.append(asyncio.create_task(parse_txt_file_async(file_path, file_date)))
+            elif file_name.endswith(".json"):
+                tasklist.append(asyncio.create_task(parse_json_file_async(file_path, file_date)))
     await asyncio.gather(*tasklist)
     # Only update if new files were actually added
     if tasklist.__len__() > 0:
