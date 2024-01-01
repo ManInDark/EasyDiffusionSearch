@@ -2,7 +2,7 @@ import os
 if not os.path.isfile("config.json"):
     print("config.json not found, please create one")
     exit()
-    
+
 import datetime
 import time
 DATE_FORMAT = "%Y-%m-%d"
@@ -19,7 +19,10 @@ import json
 with open("config.json", "r") as f:
     data = json.load(f)
     IMAGE_ROOT_PATH = data["image-path"]
-    # Added in an update
+    if IMAGE_ROOT_PATH == "":
+        print("Please set \"image-path\" in config.json")
+        exit()
+
     if "last-scanned-folder-date" not in data:
         data["last-scanned-folder-date"] = LAST_SCANNED_FOLDER_DATE_DEFAULT_CONFIG_VALUE
 
