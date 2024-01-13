@@ -121,7 +121,11 @@
             })
             fetch('count?' + urlsp.toString())
                 .then(response => response.text())
-                .then(amount => document.querySelectorAll('.result.counter')[0].innerText = amount)
+                .then(amount => {
+                    document.querySelectorAll('.result.counter')[0].innerText = amount;
+                    last_page = (amount - (amount % page_size)) / page_size;
+                    document.querySelectorAll('[lastpage]').forEach(btn => btn.setAttribute('lastpage', last_page));
+                });
 
             nextpagevalidp = new URLSearchParams({
                 query: (simplesearch) ? convertSearch(searchtext) : searchtext,
@@ -135,14 +139,18 @@
                 .then(div => {
                     if (div.getElementsByTagName('img').length === 0) {
                         document.querySelectorAll('button[onclick="nextPage()"]').forEach(btn => btn.disabled = true);
+                        document.querySelectorAll('[lastpage]').forEach(btn => btn.disabled = true);
                     } else {
                         document.querySelectorAll('button[onclick="nextPage()"]').forEach(btn => btn.disabled = false);
+                        document.querySelectorAll('[lastpage]').forEach(btn => btn.disabled = false);
                     }
                 })
             if (page === 0) {
                 document.querySelectorAll('button[onclick="previousPage()"]').forEach(btn => btn.disabled = true);
+                document.querySelectorAll('button[onclick="page = 0; search()"]').forEach(btn => btn.disabled = true);
             } else {
                 document.querySelectorAll('button[onclick="previousPage()"]').forEach(btn => btn.disabled = false);
+                document.querySelectorAll('button[onclick="page = 0; search()"]').forEach(btn => btn.disabled = false);
             }
         }
 
@@ -173,14 +181,18 @@
     <label for="simplesearch">Simple Search</label>
     <button onclick="resetSearch()">Reset</button>
     <button onclick="refresh()">Refresh</button>
-    <button onclick="previousPage()" disabled>Previous</button>
+    <button onclick="page = 0; search()">&lt&lt</button>
+    <button onclick="previousPage()" disabled>&lt</button>
     <p class="page counter">0</p>
-    <button onclick="nextPage()" disabled>Next</button>
+    <button onclick="nextPage()" disabled>&gt</button>
+    <button lastpage="0" onclick="page = this.getAttribute('lastpage'); search()">&gt&gt</button>
     <p class="result counter">-1</p>
     <div id="imagecontainer"><br></div>
-    <button onclick="previousPage()" disabled>Previous</button>
+    <button onclick="page = 0; search()">&lt&lt</button>
+    <button onclick="previousPage()" disabled>&lt</button>
     <p class="page counter">0</p>
-    <button onclick="nextPage()" disabled>Next</button>
+    <button onclick="nextPage()" disabled>&gt</button>
+    <button lastpage="0" onclick="page = this.getAttribute('lastpage'); search()">&gt&gt</button>
 </body>
 
 </html>
