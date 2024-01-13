@@ -85,9 +85,11 @@
 
         function resetSearch() {
             localStorage.removeItem("searchtext")
-            localStorage.removeItem("simplesearch")
-            document.getElementById('searchtext').value = "1 order by creation_time desc"
-            document.getElementById('simplesearch').checked = false
+            if (document.getElementById('simplesearch').checked) {
+                document.getElementById('searchtext').value = ""
+            } else {
+                document.getElementById('searchtext').value = "1 order by creation_time desc"
+            }
             search()
         }
 
