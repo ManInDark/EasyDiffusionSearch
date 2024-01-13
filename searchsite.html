@@ -96,14 +96,14 @@
         }
 
         function search() {
-            document.querySelectorAll('.page.counter').forEach(p => p.innerText = page)
             let searchtext = document.getElementById('searchtext').value
             let simplesearch = document.getElementById('simplesearch').checked
-            localStorage.setItem("searchtext", searchtext);
-            localStorage.setItem("simplesearch", simplesearch);
-            if (!searchtext === localStorage.getItem("searchtext")) {
+            if (!(searchtext === localStorage.getItem("searchtext"))) {
                 page = 0;
             }
+            document.querySelectorAll('.page.counter').forEach(p => p.innerText = page)
+            localStorage.setItem("searchtext", searchtext);
+            localStorage.setItem("simplesearch", simplesearch);
             page_size = typeof (page_size) === "undefined" ? 30 : page_size
             urlsp = new URLSearchParams({
                 query: (simplesearch) ? convertSearch(searchtext) : searchtext,
