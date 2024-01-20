@@ -19,13 +19,23 @@ python server.py
 Which can then be opened on localhost:8000
 
 You can now type in a query into the text field at the top of the page and with the press of return it will show you the filtered images.
-The query needs to be a SQL WHERE clause in a table with the columns: path, creation_time, prompt, negative_prompt, seed (int), model, width (int), height (int), sampler, steps (int), guidance_scale (float), lora, upscaling, face_correction
+The query needs to be a SQL WHERE clause in a table with the columns: path, creation_time (datetime, YYYY-MM-DD for filter), prompt, negative_prompt, seed (int), model, width (int), height (int), sampler, steps (int), guidance_scale (float), lora, upscaling, face_correction
 
-Examples:
+Examples: (Standard Search)
 
 ```
 1 order by creation_time desc
 width = 512 AND height = 512
+creation_time > '2024-01-01'
 prompt like '%astronaut%'
 model like '%sd%'
+```
+
+Examples: (Simple Search)
+
+```
+
+512x512
+astronaut
+sd
 ```

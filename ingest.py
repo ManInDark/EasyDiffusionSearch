@@ -156,6 +156,7 @@ async def main():
             file_path = os.path.join(root, file_name)
             file_time = os.path.getctime(file_path)
             file_date = (file_time // ONE_DAY) * ONE_DAY # Truncate to day
+            file_time = datetime.datetime.fromtimestamp(file_time)
 
             # Allow re-scanning files on the same day they are created
             if file_date < LAST_SCANNED_FOLDER_DATE:
